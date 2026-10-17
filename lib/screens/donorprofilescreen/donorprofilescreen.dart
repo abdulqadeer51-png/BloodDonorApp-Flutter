@@ -1,7 +1,11 @@
 import 'package:blooddonerapp/screens/donatebloodscreen/donatebloodscreen.dart';
 import 'package:blooddonerapp/screens/finddonnerscreen/finddonnerscreen.dart';
 import 'package:blooddonerapp/screens/homescreen/homescreen.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class DonorProfileScreen extends StatefulWidget {
   const DonorProfileScreen({super.key});
@@ -12,6 +16,83 @@ class DonorProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<DonorProfileScreen> {
   int currentIndex = 3;
+  @override
+void initState() {
+  super.initState();
+  _loadProfileImage();
+}
+
+Future<void> _loadProfileImage() async {
+  final prefs = await SharedPreferences.getInstance();
+  final savedPath = prefs.getString('profile_image_path');
+
+  if (savedPath == null || !mounted) return;
+
+  final savedFile = File(savedPath);
+
+  if (await savedFile.exists()) {
+    setState(() {
+      _profileImage = savedFile;
+    });
+  }
+}
+  File? _profileImage;
+  final ImagePicker _picker = ImagePicker();
+
+  
+Future<void> _pickProfileImage() async {
+  try {
+    final XFile? pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+    );
+
+    if (pickedFile == null || !mounted) return;
+
+    // App ke private folder mein image save karein
+    final appDir = await getApplicationDocumentsDirectory();
+
+    final extension = pickedFile.path.contains('.')
+        ? pickedFile.path.substring(
+            pickedFile.path.lastIndexOf('.'),
+          )
+        : '.jpg';
+
+    final savedImage = await File(pickedFile.path).copy(
+      '${appDir.path}/profile_picture$extension',
+    );
+
+    // Image ka path permanently save karein
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      'profile_image_path',
+      savedImage.path,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _profileImage = savedImage;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Profile picture saved successfully!'),
+      ),
+    );
+  } catch (e) {
+    debugPrint('PROFILE IMAGE ERROR: $e');
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Image save error: $e'),
+      ),
+    );
+  }
+}
+
+
   void openTab(int index) {
     setState(() => currentIndex = index);
 
@@ -198,25 +279,33 @@ class _ProfileScreenState extends State<DonorProfileScreen> {
                     Stack(
                       alignment: Alignment.bottomRight,
                       children: [
-                        const CircleAvatar(
+                        CircleAvatar(
                           radius: 48,
                           backgroundColor: Colors.white,
-                          child: Icon(
-                            Icons.person,
-                            size: 55,
-                            color: primaryRed,
-                          ),
+                          backgroundImage: _profileImage != null
+                              ? FileImage(_profileImage!)
+                              : null,
+                          child: _profileImage == null
+                              ? const Icon(
+                                  Icons.person,
+                                  size: 55,
+                                  color: primaryRed,
+                                )
+                              : null,
                         ),
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.camera_alt,
-                            size: 18,
-                            color: primaryRed,
+                        InkWell(
+                          onTap: () => _pickProfileImage(),
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.camera_alt,
+                              size: 18,
+                              color: primaryRed,
+                            ),
                           ),
                         ),
                       ],

@@ -461,18 +461,22 @@ class _FindDonorScreenState extends State<FindDonorScreen> {
             ),
             const SizedBox(height: 10),
 
-            const Card(
+            Card(
               color: Colors.white,
-              child: ListTile(
-                leading: Icon(
-                  Icons.health_and_safety_outlined,
-                  color: Colors.red,
-                  size: 32,
-                ),
-                title: Text('Verify donor eligibility'),
-                subtitle: Text(
-                  'Confirm donor suitability with a qualified '
-                  'healthcare professional.',
+              clipBehavior: Clip.antiAlias,
+              child: Material(
+                color: Colors.white,
+                child: ListTile(
+                  leading: const Icon(
+                    Icons.health_and_safety_outlined,
+                    color: Colors.red,
+                    size: 32,
+                  ),
+                  title: const Text('Verify donor eligibility'),
+                  subtitle: const Text(
+                    'Confirm donor suitability with a qualified '
+                    'healthcare professional.',
+                  ),
                 ),
               ),
             ),

@@ -4,7 +4,9 @@ import 'package:blooddonerapp/screens/homescreen/homescreen.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
+
 import 'dart:io';
+
 import 'package:image_picker/image_picker.dart';
 
 class DonorProfileScreen extends StatefulWidget {
@@ -16,82 +18,89 @@ class DonorProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<DonorProfileScreen> {
   int currentIndex = 3;
+  bool _darkMode = false;
+
   @override
-void initState() {
-  super.initState();
-  _loadProfileImage();
-}
-
-Future<void> _loadProfileImage() async {
-  final prefs = await SharedPreferences.getInstance();
-  final savedPath = prefs.getString('profile_image_path');
-
-  if (savedPath == null || !mounted) return;
-
-  final savedFile = File(savedPath);
-
-  if (await savedFile.exists()) {
-    setState(() {
-      _profileImage = savedFile;
-    });
+  void initState() {
+    super.initState();
+    _loadProfileImage();
+    _loadProfileDetails();
   }
-}
+
+  Future<void> _loadProfileImage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedPath = prefs.getString('profile_image_path');
+
+    if (savedPath == null || !mounted) return;
+
+    final savedFile = File(savedPath);
+
+    if (await savedFile.exists()) {
+      setState(() {
+        _profileImage = savedFile;
+      });
+    }
+  }
+
   File? _profileImage;
   final ImagePicker _picker = ImagePicker();
 
-  
-Future<void> _pickProfileImage() async {
-  try {
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-    );
-
-    if (pickedFile == null || !mounted) return;
-
-    // App ke private folder mein image save karein
-    final appDir = await getApplicationDocumentsDirectory();
-
-    final extension = pickedFile.path.contains('.')
-        ? pickedFile.path.substring(
-            pickedFile.path.lastIndexOf('.'),
-          )
-        : '.jpg';
-
-    final savedImage = await File(pickedFile.path).copy(
-      '${appDir.path}/profile_picture$extension',
-    );
-
-    // Image ka path permanently save karein
+  Future<void> _loadProfileDetails() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      'profile_image_path',
-      savedImage.path,
-    );
 
     if (!mounted) return;
 
     setState(() {
-      _profileImage = savedImage;
+      _nameController.text = prefs.getString('profile_name') ?? '';
+
+      _emailController.text = prefs.getString('profile_email') ?? '';
+
+      _phoneController.text = prefs.getString('profile_phone') ?? '';
+
+      _cityController.text = prefs.getString('profile_city') ?? '';
     });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Profile picture saved successfully!'),
-      ),
-    );
-  } catch (e) {
-    debugPrint('PROFILE IMAGE ERROR: $e');
-
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Image save error: $e'),
-      ),
-    );
   }
-}
 
+  Future<void> _pickProfileImage() async {
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+        source: ImageSource.gallery,
+      );
+
+      if (pickedFile == null || !mounted) return;
+
+      // App ke private folder mein image save karein
+      final appDir = await getApplicationDocumentsDirectory();
+
+      final extension = pickedFile.path.contains('.')
+          ? pickedFile.path.substring(pickedFile.path.lastIndexOf('.'))
+          : '.jpg';
+
+      final savedImage = await File(pickedFile.path)
+          .copy('${appDir.path}/profile_picture$extension');
+
+      // Image ka path permanently save karein
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('profile_image_path', savedImage.path);
+
+      if (!mounted) return;
+
+      setState(() {
+        _profileImage = savedImage;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile picture saved successfully!')),
+      );
+    } catch (e) {
+      debugPrint('PROFILE IMAGE ERROR: $e');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Image save error: $e')));
+    }
+  }
 
   void openTab(int index) {
     setState(() => currentIndex = index);
@@ -128,12 +137,10 @@ Future<void> _pickProfileImage() async {
 
   static const Color primaryRed = Color(0xFFD71920);
 
-  final TextEditingController _nameController = TextEditingController(
-    text: 'Your Name',
-  );
+  final TextEditingController _nameController = TextEditingController(text: '');
 
   final TextEditingController _emailController = TextEditingController(
-    text: 'yourname@email.com',
+    text: '',
   );
 
   final TextEditingController _phoneController = TextEditingController(
@@ -141,8 +148,6 @@ Future<void> _pickProfileImage() async {
   );
 
   final TextEditingController _cityController = TextEditingController(text: '');
-
-  bool _darkMode = false;
 
   @override
   void dispose() {
@@ -156,6 +161,7 @@ Future<void> _pickProfileImage() async {
   void _editProfile() {
     final nameController = TextEditingController(text: _nameController.text);
     final phoneController = TextEditingController(text: _phoneController.text);
+    final emailController = TextEditingController(text: _emailController.text);
     final cityController = TextEditingController(text: _cityController.text);
 
     showDialog(
@@ -184,6 +190,17 @@ Future<void> _pickProfileImage() async {
                   ),
                 ),
                 const SizedBox(height: 12),
+
+                TextField(
+                  controller: emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                    labelText: 'Email Address',
+                    prefixIcon: Icon(Icons.email_outlined),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
                 TextField(
                   controller: cityController,
                   decoration: const InputDecoration(
@@ -204,16 +221,59 @@ Future<void> _pickProfileImage() async {
                 backgroundColor: primaryRed,
                 foregroundColor: Colors.white,
               ),
-              onPressed: () {
+              onPressed: () async {
+                final email = emailController.text.trim();
+
+                final emailRegex = RegExp(r'^[a-z-0-9._%+-]+@gmail\.com$');
+
+                if (!emailRegex.hasMatch(email)) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please enter a valid email address.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                final phone = phoneController.text.trim();
+
+                // Pakistan mobile number: 03XXXXXXXXX
+                final phoneRegex = RegExp(r'^03[0-9]{9}$');
+
+                if (phone.isNotEmpty && !phoneRegex.hasMatch(phone)) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Enter a valid mobile number (03XXXXXXXXX).',
+                      ),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                final prefs = await SharedPreferences.getInstance();
+
+                await prefs.setString('profile_name', nameController.text);
+                await prefs.setString('profile_phone', phoneController.text);
+                await prefs.setString('profile_email', emailController.text);
+                await prefs.setString('profile_city', cityController.text);
+
+                if (!mounted) return;
+
                 setState(() {
-                  _nameController.text = nameController.text.trim();
-                  _phoneController.text = phoneController.text.trim();
-                  _cityController.text = cityController.text.trim();
+                  _nameController.text = nameController.text;
+                  _phoneController.text = phoneController.text;
+                  _emailController.text = emailController.text;
+                  _cityController.text = cityController.text;
                 });
+
                 Navigator.pop(dialogContext);
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Profile updated for this session'),
+                    content: Text('Profile updated successfully!'),
                   ),
                 );
               },
@@ -400,27 +460,32 @@ Future<void> _pickProfileImage() async {
                   color: surface,
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: SwitchListTile(
-                  value: _darkMode,
-                  activeThumbColor: primaryRed,
-                  secondary: const Icon(
-                    Icons.dark_mode_outlined,
-                    color: primaryRed,
-                  ),
-                  title: Text(
-                    'Dark Mode',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: textColor,
+                child: Material(
+                  color: surface,
+                  borderRadius: BorderRadius.circular(16),
+                  clipBehavior: Clip.antiAlias,
+                  child: SwitchListTile(
+                    value: _darkMode,
+                    activeThumbColor: primaryRed,
+                    secondary: const Icon(
+                      Icons.dark_mode_outlined,
+                      color: primaryRed,
                     ),
+                    title: Text(
+                      'Dark Mode',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: textColor,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Change the appearance of this screen',
+                      style: TextStyle(color: secondaryColor),
+                    ),
+                    onChanged: (value) {
+                      setState(() => _darkMode = value);
+                    },
                   ),
-                  subtitle: Text(
-                    'Change the appearance of this screen',
-                    style: TextStyle(color: secondaryColor),
-                  ),
-                  onChanged: (value) {
-                    setState(() => _darkMode = value);
-                  },
                 ),
               ),
 
@@ -431,38 +496,43 @@ Future<void> _pickProfileImage() async {
                   color: surface,
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: ListTile(
-                  leading: const Icon(Icons.logout, color: primaryRed),
-                  title: Text(
-                    'Logout',
-                    style: TextStyle(
-                      color: textColor,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  trailing: Icon(
-                    Icons.arrow_forward_ios,
-                    size: 16,
-                    color: secondaryColor,
-                  ),
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (dialogContext) => AlertDialog(
-                        title: const Text('Logout'),
-                        content: const Text(
-                          'Logout functionality will be connected '
-                          'with Firebase later.',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(dialogContext),
-                            child: const Text('OK'),
-                          ),
-                        ],
+                child: Material(
+                  color: surface,
+                  borderRadius: BorderRadius.circular(16),
+                  clipBehavior: Clip.antiAlias,
+                  child: ListTile(
+                    leading: const Icon(Icons.logout, color: primaryRed),
+                    title: Text(
+                      'Logout',
+                      style: TextStyle(
+                        color: textColor,
+                        fontWeight: FontWeight.w600,
                       ),
-                    );
-                  },
+                    ),
+                    trailing: Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: secondaryColor,
+                    ),
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (dialogContext) => AlertDialog(
+                          title: const Text('Logout'),
+                          content: const Text(
+                            'Logout functionality will be connected '
+                            'with Firebase later.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(dialogContext),
+                              child: const Text('OK'),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
             ],
@@ -510,27 +580,32 @@ Future<void> _pickProfileImage() async {
         color: surface,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: primaryRed.withOpacity(0.10),
-            borderRadius: BorderRadius.circular(12),
+      child: Material(
+        color: surface,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          leading: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: primaryRed.withOpacity(0.10),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: primaryRed),
           ),
-          child: Icon(icon, color: primaryRed),
-        ),
-        title: Text(
-          title,
-          style: TextStyle(fontSize: 13, color: secondaryColor),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Text(
-            value,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: textColor,
+          title: Text(
+            title,
+            style: TextStyle(fontSize: 13, color: secondaryColor),
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: textColor,
+              ),
             ),
           ),
         ),

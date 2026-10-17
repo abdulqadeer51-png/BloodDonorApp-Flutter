@@ -380,24 +380,29 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: Colors.grey.shade300),
                   ),
-                  child: SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    activeThumbColor: primaryRed,
-                    title: const Text(
-                      'Available to Donate',
-                      style: TextStyle(fontWeight: FontWeight.w600),
+                  child: Material(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    clipBehavior: Clip.antiAlias,
+                    child: SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      activeThumbColor: primaryRed,
+                      title: const Text(
+                        'Available to Donate',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text(
+                        _isAvailable
+                            ? 'You can receive donor requests'
+                            : 'You are currently unavailable',
+                      ),
+                      value: _isAvailable,
+                      onChanged: (value) {
+                        setState(() {
+                          _isAvailable = value;
+                        });
+                      },
                     ),
-                    subtitle: Text(
-                      _isAvailable
-                          ? 'You can receive donor requests'
-                          : 'You are currently unavailable',
-                    ),
-                    value: _isAvailable,
-                    onChanged: (value) {
-                      setState(() {
-                        _isAvailable = value;
-                      });
-                    },
                   ),
                 ),
 

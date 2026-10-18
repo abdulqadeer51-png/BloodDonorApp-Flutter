@@ -14,15 +14,18 @@ class DonorDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String name = donor['name'] ?? 'Donor';
-    final String blood = donor['blood'] ?? 'N/A';
-    final String city = donor['city'] ?? 'Not provided';
-    final String area = donor['area'] ?? 'Not provided';
-    final String phone = donor['phone'] ?? 'Not provided';
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    final String name = donor['name']?.toString() ?? 'Donor';
+    final String blood = donor['blood']?.toString() ?? 'N/A';
+    final String city = donor['city']?.toString() ?? 'Not provided';
+    final String area = donor['area']?.toString() ?? 'Not provided';
+    final String phone = donor['phone']?.toString() ?? 'Not provided';
     final bool available = donor['available'] == true;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F8F8),
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: red,
         foregroundColor: Colors.white,
@@ -31,7 +34,6 @@ class DonorDetailsScreen extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(18),
         child: Column(
@@ -42,14 +44,14 @@ class DonorDetailsScreen extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Column(
                 children: [
                   CircleAvatar(
                     radius: 48,
-                    backgroundColor: const Color(0xFFFCE7E7),
+                    backgroundColor: red.withValues(alpha: 0.12),
                     child: const Icon(
                       Icons.person,
                       size: 58,
@@ -57,24 +59,23 @@ class DonorDetailsScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 14),
-
                   Text(
                     name,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 23,
                       fontWeight: FontWeight.bold,
+                      color: colors.onSurface,
                     ),
                   ),
                   const SizedBox(height: 10),
-
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 9,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFCE7E7),
+                      color: red.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -87,7 +88,6 @@ class DonorDetailsScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -100,7 +100,7 @@ class DonorDetailsScreen extends StatelessWidget {
                       Text(
                         available ? 'Available to Donate' : 'Unavailable',
                         style: TextStyle(
-                          color: available ? Colors.green : Colors.grey,
+                          color: available ? Colors.green : colors.onSurfaceVariant,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -112,42 +112,40 @@ class DonorDetailsScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            const Text(
-              'Contact & Location',
-              style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            _sectionHeading(context, 'Contact & Location'),
             const SizedBox(height: 12),
 
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
                 children: [
                   _detailRow(
+                    context,
                     icon: Icons.phone_outlined,
                     title: 'Contact Number',
                     value: phone,
                   ),
-                  const Divider(height: 26),
+                  Divider(height: 26, color: theme.dividerColor),
                   _detailRow(
+                    context,
                     icon: Icons.location_city,
                     title: 'City',
                     value: city,
                   ),
-                  const Divider(height: 26),
+                  Divider(height: 26, color: theme.dividerColor),
                   _detailRow(
+                    context,
                     icon: Icons.location_on_outlined,
                     title: 'Area',
                     value: area,
                   ),
-                  const Divider(height: 26),
+                  Divider(height: 26, color: theme.dividerColor),
                   _detailRow(
+                    context,
                     icon: Icons.bloodtype_outlined,
                     title: 'Blood Group',
                     value: blood,
@@ -158,36 +156,29 @@ class DonorDetailsScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            const Text(
-              'Contact Donor',
-              style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            _sectionHeading(context, 'Contact Donor'),
             const SizedBox(height: 12),
 
-            // Call button
             SizedBox(
               width: double.infinity,
               height: 52,
               child: ElevatedButton.icon(
-                onPressed: phone == 'Not provided'
+                onPressed: phone == 'Not provided' || phone.isEmpty
                     ? null
                     : () async {
                         await Clipboard.setData(
                           ClipboardData(text: phone),
                         );
 
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Phone number copied. You can paste it into your phone app.',
-                              ),
+                        if (!context.mounted) return;
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Phone number copied. You can paste it into your phone app.',
                             ),
-                          );
-                        }
+                          ),
+                        );
                       },
                 icon: const Icon(Icons.phone),
                 label: const Text('Copy Contact Number'),
@@ -221,11 +212,12 @@ class DonorDetailsScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 20),
+
             Text(
               'Please confirm donor availability before travelling.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.grey.shade600,
+                color: colors.onSurfaceVariant,
                 fontSize: 12,
               ),
             ),
@@ -235,11 +227,26 @@ class DonorDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _detailRow({
+  Widget _sectionHeading(BuildContext context, String title) {
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 19,
+        fontWeight: FontWeight.bold,
+        color: Theme.of(context).colorScheme.onSurface,
+      ),
+    );
+  }
+
+  Widget _detailRow(
+    BuildContext context, {
     required IconData icon,
     required String title,
     required String value,
   }) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -247,7 +254,7 @@ class DonorDetailsScreen extends StatelessWidget {
           height: 42,
           width: 42,
           decoration: BoxDecoration(
-            color: const Color(0xFFFCE7E7),
+            color: red.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: red),
@@ -260,16 +267,17 @@ class DonorDetailsScreen extends StatelessWidget {
               Text(
                 title,
                 style: TextStyle(
-                  color: Colors.grey.shade600,
+                  color: colors.onSurfaceVariant,
                   fontSize: 12,
                 ),
               ),
               const SizedBox(height: 5),
               Text(
                 value,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
+                  color: colors.onSurface,
                 ),
               ),
             ],

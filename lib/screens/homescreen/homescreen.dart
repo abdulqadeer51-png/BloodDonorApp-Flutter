@@ -17,7 +17,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   int currentIndex = 0;
 
-  // Temporary sample data. Firebase baad mein add hoga.
   List<Map<String, dynamic>> get donors => DonorData.donors;
 
   void openTab(int index) {
@@ -27,16 +26,15 @@ class _HomeScreenState extends State<HomeScreen> {
       case 0:
         break;
 
-        case 1:
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => FindDonorScreen(donors: donors),
-    ),
-  ).then((_) {
-    if (mounted) setState(() => currentIndex = 0);
-  });
-  break;
+      case 1:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => FindDonorScreen(donors: donors)),
+        ).then((_) {
+          if (mounted) setState(() => currentIndex = 0);
+        });
+        break;
+
       case 2:
         Navigator.push<Map<String, dynamic>>(
           context,
@@ -76,8 +74,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F8F8),
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: red,
         foregroundColor: Colors.white,
@@ -105,7 +107,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -140,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // Only two Quick Actions
+            // Quick Actions
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(16, 22, 16, 0),
               sliver: SliverToBoxAdapter(
@@ -168,18 +169,19 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // Donor grid heading
+            // Available Donors heading
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(16, 26, 16, 12),
               sliver: SliverToBoxAdapter(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       'Available Donors',
                       style: TextStyle(
                         fontSize: 19,
                         fontWeight: FontWeight.bold,
+                        color: colors.onSurface,
                       ),
                     ),
                     Text(
@@ -194,13 +196,12 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // Donor GridView
+            // Donor Grid
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               sliver: SliverGrid(
                 delegate: SliverChildBuilderDelegate((context, index) {
                   final donor = donors[index];
-
                   return _donorCard(donor);
                 }, childCount: donors.length),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -216,29 +217,36 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: currentIndex,
+        backgroundColor: theme.cardColor,
         type: BottomNavigationBarType.fixed,
+        currentIndex: currentIndex,
         selectedItemColor: red,
-        unselectedItemColor: Colors.grey,
+        unselectedItemColor: colors.onSurfaceVariant,
+        selectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.w600,
+          fontSize: 11,
+        ),
+        unselectedLabelStyle: const TextStyle(fontSize: 11),
         onTap: openTab,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
+            activeIcon: Icon(Icons.home_rounded),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.search),
+            icon: Icon(Icons.search_rounded),
             label: 'Find Donor',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.volunteer_activism_outlined),
-            label: 'Donate Blood',
+            activeIcon: Icon(Icons.volunteer_activism_rounded),
+            label: 'Donate',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
+            icon: Icon(Icons.person_outline_rounded),
+            activeIcon: Icon(Icons.person_rounded),
             label: 'Profile',
           ),
         ],
@@ -252,8 +260,11 @@ class _HomeScreenState extends State<HomeScreen> {
     required String subtitle,
     required VoidCallback onTap,
   }) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     return Material(
-      color: Colors.white,
+      color: theme.cardColor,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
@@ -262,7 +273,7 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: theme.dividerColor),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,23 +282,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 44,
                 width: 44,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFCE7E7),
+                  color: red.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: red, size: 25),
+                child: const Icon(Icons.search, color: red, size: 25),
               ),
               const SizedBox(height: 12),
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
+                  color: colors.onSurface,
                 ),
               ),
               const SizedBox(height: 5),
               Text(
                 subtitle,
-                style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                style: TextStyle(fontSize: 11, color: colors.onSurfaceVariant),
               ),
             ],
           ),
@@ -297,6 +309,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _donorCard(Map<String, dynamic> donor) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     final bool available = donor['available'] == true;
 
     return InkWell(
@@ -310,12 +325,12 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.cardColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade200),
+          border: Border.all(color: theme.dividerColor),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
+              color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.03),
               blurRadius: 8,
               offset: const Offset(0, 3),
             ),
@@ -328,7 +343,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 CircleAvatar(
                   radius: 19,
-                  backgroundColor: const Color(0xFFFCE7E7),
+                  backgroundColor: red.withValues(alpha: 0.12),
                   child: const Icon(Icons.person, color: red),
                 ),
                 const Spacer(),
@@ -338,11 +353,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     vertical: 5,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFCE7E7),
+                    color: red.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    donor['blood'],
+                    donor['blood']?.toString() ?? 'N/A',
                     style: const TextStyle(
                       color: red,
                       fontWeight: FontWeight.bold,
@@ -353,26 +368,33 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              donor['name'],
+              donor['name']?.toString() ?? 'Unknown Donor',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                color: colors.onSurface,
+              ),
             ),
             const SizedBox(height: 7),
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.location_on_outlined,
                   size: 15,
-                  color: Colors.grey,
+                  color: colors.onSurfaceVariant,
                 ),
                 const SizedBox(width: 3),
                 Expanded(
                   child: Text(
-                    donor['city'],
+                    donor['city']?.toString() ?? 'Not specified',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    style: TextStyle(
+                      color: colors.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
               ],
@@ -391,7 +413,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     available ? 'Available' : 'Unavailable',
                     style: TextStyle(
                       fontSize: 11,
-                      color: available ? Colors.green : Colors.grey,
+                      color: available ? Colors.green : colors.onSurfaceVariant,
                     ),
                   ),
                 ),

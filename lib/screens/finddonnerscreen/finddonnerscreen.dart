@@ -18,44 +18,10 @@ class _FindDonorScreenState extends State<FindDonorScreen> {
   final _formKey = GlobalKey<FormState>();
   final _cityController = TextEditingController();
 
-  int currentIndex = 1; // Set the initial index for the Find Donor tab
+  static const Color red = Color(0xFFD71920);
 
-  void openTab(int index) {
-    setState(() => currentIndex = index);
-
-    switch (index) {
-      case 0:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
-        ).then((_) {
-          if (mounted) setState(() => currentIndex = 0);
-        });
-        break;
-      case 1:
-        break;
-      case 2:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const DonateBloodScreen()),
-        ).then((_) {
-          if (mounted) setState(() => currentIndex = 0);
-        });
-        break;
-      case 3:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const DonorProfileScreen()),
-        ).then((_) {
-          if (mounted) setState(() => currentIndex = 0);
-        });
-        break;
-    }
-  }
-
+  int currentIndex = 1;
   String? _selectedGroup;
-
-  final Color red = const Color(0xFFD71920);
 
   final List<String> bloodGroups = [
     'A+',
@@ -67,13 +33,48 @@ class _FindDonorScreenState extends State<FindDonorScreen> {
     'O+',
     'O-',
   ];
+
   List<Map<String, dynamic>> searchResults = [];
   bool hasSearched = false;
 
-  void _searchDonors() {
-    if (!_formKey.currentState!.validate()) {
-      return;
+  void openTab(int index) {
+    setState(() => currentIndex = index);
+
+    switch (index) {
+      case 0:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+        ).then((_) {
+          if (mounted) setState(() => currentIndex = 1);
+        });
+        break;
+
+      case 1:
+        break;
+
+      case 2:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const DonateBloodScreen()),
+        ).then((_) {
+          if (mounted) setState(() => currentIndex = 1);
+        });
+        break;
+
+      case 3:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const DonorProfileScreen()),
+        ).then((_) {
+          if (mounted) setState(() => currentIndex = 1);
+        });
+        break;
     }
+  }
+
+  void _searchDonors() {
+    if (!_formKey.currentState!.validate()) return;
 
     final cityOrArea = _cityController.text.trim().toLowerCase();
 
@@ -103,20 +104,23 @@ class _FindDonorScreenState extends State<FindDonorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF7F7F7),
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: red,
         foregroundColor: Colors.white,
         title: const Text('Find Blood Donor'),
       ),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header banner
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -148,15 +152,19 @@ class _FindDonorScreenState extends State<FindDonorScreen> {
 
             const SizedBox(height: 25),
 
-            const Text(
+            Text(
               'Search Donors',
-              style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 21,
+                fontWeight: FontWeight.bold,
+                color: colors.onSurface,
+              ),
             ),
 
             const SizedBox(height: 14),
 
             Card(
-              color: Colors.white,
+              color: theme.cardColor,
               elevation: 1,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -168,14 +176,19 @@ class _FindDonorScreenState extends State<FindDonorScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Select Blood Group',
-                        style: TextStyle(fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: colors.onSurface,
+                        ),
                       ),
                       const SizedBox(height: 8),
 
                       DropdownButtonFormField<String>(
-                        value: _selectedGroup,
+                        initialValue: _selectedGroup,
+                        dropdownColor: theme.cardColor,
+                        style: TextStyle(color: colors.onSurface),
                         decoration: const InputDecoration(
                           prefixIcon: Icon(Icons.bloodtype),
                           hintText: 'Choose blood group',
@@ -194,23 +207,25 @@ class _FindDonorScreenState extends State<FindDonorScreen> {
                           return null;
                         },
                         onChanged: (value) {
-                          setState(() {
-                            _selectedGroup = value;
-                          });
+                          setState(() => _selectedGroup = value);
                         },
                       ),
 
                       const SizedBox(height: 20),
 
-                      const Text(
+                      Text(
                         'City or Area',
-                        style: TextStyle(fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: colors.onSurface,
+                        ),
                       ),
                       const SizedBox(height: 8),
 
                       TextFormField(
                         controller: _cityController,
                         textCapitalization: TextCapitalization.words,
+                        style: TextStyle(color: colors.onSurface),
                         decoration: const InputDecoration(
                           prefixIcon: Icon(Icons.location_on_outlined),
                           hintText: 'e.g. Peshawar',
@@ -257,25 +272,25 @@ class _FindDonorScreenState extends State<FindDonorScreen> {
             const SizedBox(height: 24),
 
             if (hasSearched) ...[
-              const SizedBox(height: 24),
-
               Text(
                 'Search Results (${searchResults.length})',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 19,
                   fontWeight: FontWeight.bold,
+                  color: colors.onSurface,
                 ),
               ),
-
               const SizedBox(height: 12),
 
               if (searchResults.isEmpty)
-                const Card(
-                  child: Padding(
+                Card(
+                  color: theme.cardColor,
+                  child: const Padding(
                     padding: EdgeInsets.all(20),
                     child: Center(
                       child: Text(
-                        'No matching donors found.\nTry another blood group or location.',
+                        'No matching donors found.\n'
+                        'Try another blood group or location.',
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -294,17 +309,19 @@ class _FindDonorScreenState extends State<FindDonorScreen> {
                   ),
                   itemBuilder: (context, index) {
                     final donor = searchResults[index];
-                    final bool available = donor['available'] == true;
+                    final available = donor['available'] == true;
 
                     return Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: theme.cardColor,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade200),
+                        border: Border.all(color: theme.dividerColor),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.04),
+                            color: Colors.black.withValues(
+                              alpha: isDark ? 0.15 : 0.04,
+                            ),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
@@ -315,13 +332,10 @@ class _FindDonorScreenState extends State<FindDonorScreen> {
                         children: [
                           Row(
                             children: [
-                              const CircleAvatar(
+                              CircleAvatar(
                                 radius: 17,
-                                backgroundColor: Color(0xFFFCE7E7),
-                                child: Icon(
-                                  Icons.person,
-                                  color: Color(0xFFD71920),
-                                ),
+                                backgroundColor: red.withValues(alpha: 0.12),
+                                child: const Icon(Icons.person, color: red),
                               ),
                               const Spacer(),
                               Container(
@@ -330,13 +344,13 @@ class _FindDonorScreenState extends State<FindDonorScreen> {
                                   vertical: 5,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFFCE7E7),
+                                  color: red.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
                                   donor['blood']?.toString() ?? '',
                                   style: const TextStyle(
-                                    color: Color(0xFFD71920),
+                                    color: red,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -350,9 +364,10 @@ class _FindDonorScreenState extends State<FindDonorScreen> {
                             donor['name']?.toString() ?? 'Donor',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
+                              color: colors.onSurface,
                             ),
                           ),
 
@@ -360,10 +375,10 @@ class _FindDonorScreenState extends State<FindDonorScreen> {
 
                           Row(
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.location_on_outlined,
                                 size: 14,
-                                color: Colors.grey,
+                                color: colors.onSurfaceVariant,
                               ),
                               const SizedBox(width: 3),
                               Expanded(
@@ -371,9 +386,9 @@ class _FindDonorScreenState extends State<FindDonorScreen> {
                                   donor['city']?.toString() ?? '',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 11,
-                                    color: Colors.grey,
+                                    color: colors.onSurfaceVariant,
                                   ),
                                 ),
                               ),
@@ -386,9 +401,9 @@ class _FindDonorScreenState extends State<FindDonorScreen> {
                             donor['area']?.toString() ?? '',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
-                              color: Colors.grey,
+                              color: colors.onSurfaceVariant,
                             ),
                           ),
 
@@ -410,7 +425,7 @@ class _FindDonorScreenState extends State<FindDonorScreen> {
                                     fontSize: 11,
                                     color: available
                                         ? Colors.green
-                                        : Colors.grey,
+                                        : colors.onSurfaceVariant,
                                   ),
                                 ),
                               ),
@@ -433,10 +448,8 @@ class _FindDonorScreenState extends State<FindDonorScreen> {
                                 );
                               },
                               style: OutlinedButton.styleFrom(
-                                foregroundColor: const Color(0xFFD71920),
-                                side: const BorderSide(
-                                  color: Color(0xFFD71920),
-                                ),
+                                foregroundColor: red,
+                                side: const BorderSide(color: red),
                                 padding: EdgeInsets.zero,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
@@ -455,56 +468,72 @@ class _FindDonorScreenState extends State<FindDonorScreen> {
                 ),
             ],
 
-            const Text(
+            const SizedBox(height: 24),
+
+            Text(
               'Helpful Information',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: colors.onSurface,
+              ),
             ),
             const SizedBox(height: 10),
 
             Card(
-              color: Colors.white,
+              color: theme.cardColor,
               clipBehavior: Clip.antiAlias,
-              child: Material(
-                color: Colors.white,
-                child: ListTile(
-                  leading: const Icon(
-                    Icons.health_and_safety_outlined,
-                    color: Colors.red,
-                    size: 32,
-                  ),
-                  title: const Text('Verify donor eligibility'),
-                  subtitle: const Text(
-                    'Confirm donor suitability with a qualified '
-                    'healthcare professional.',
-                  ),
+              child: ListTile(
+                leading: const Icon(
+                  Icons.health_and_safety_outlined,
+                  color: red,
+                  size: 32,
+                ),
+                title: Text(
+                  'Verify donor eligibility',
+                  style: TextStyle(color: colors.onSurface),
+                ),
+                subtitle: Text(
+                  'Confirm donor suitability with a qualified '
+                  'healthcare professional.',
+                  style: TextStyle(color: colors.onSurfaceVariant),
                 ),
               ),
             ),
           ],
         ),
       ),
+
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: currentIndex,
+        backgroundColor: theme.cardColor,
         type: BottomNavigationBarType.fixed,
+        currentIndex: currentIndex,
         selectedItemColor: red,
-        unselectedItemColor: Colors.grey,
+        unselectedItemColor: colors.onSurfaceVariant,
+        selectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.w600,
+          fontSize: 11,
+        ),
+        unselectedLabelStyle: const TextStyle(fontSize: 11),
         onTap: openTab,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
+            activeIcon: Icon(Icons.home_rounded),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.search),
+            icon: Icon(Icons.search_rounded),
             label: 'Find Donor',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.volunteer_activism_outlined),
-            label: 'Donate Blood',
+            activeIcon: Icon(Icons.volunteer_activism_rounded),
+            label: 'Donate',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
+            icon: Icon(Icons.person_outline_rounded),
+            activeIcon: Icon(Icons.person_rounded),
             label: 'Profile',
           ),
         ],

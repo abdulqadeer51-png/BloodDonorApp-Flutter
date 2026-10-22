@@ -56,7 +56,6 @@ class DefaultFirebaseOptions {
     projectId: 'blooddonorfinder-b01fc',
     storageBucket: 'blooddonorfinder-b01fc.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyC-MD5ugzih0ROGXCmeLAnId2GB9cEx8b4',
     appId: '1:1013098129035:ios:5575fd6814783d38cb968e',

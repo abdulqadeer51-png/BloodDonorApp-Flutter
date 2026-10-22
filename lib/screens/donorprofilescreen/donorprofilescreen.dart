@@ -9,6 +9,9 @@ import 'package:blooddonerapp/theme/themecontroller.dart';
 import 'package:blooddonerapp/screens/homescreen/homescreen.dart';
 import 'package:blooddonerapp/screens/finddonnerscreen/finddonnerscreen.dart';
 import 'package:blooddonerapp/screens/donatebloodscreen/donatebloodscreen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:blooddonerapp/screens/wellcomescreen/wellcomescreen.dart';
 
 class DonorProfileScreen extends StatefulWidget {
   const DonorProfileScreen({super.key});
@@ -130,6 +133,29 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
           ),
         ),
       );
+  }
+
+  Future<void> _logout() async {
+    try {
+      await GoogleSignIn.instance.signOut();
+    } catch (e) {
+      debugPrint('Google sign-out error: $e');
+    }
+
+    try {
+      await FirebaseAuth.instance.signOut();
+      debugPrint('Firebase sign-out completed');
+    } catch (e, stackTrace) {
+      debugPrint('Firebase sign-out error: $e');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+
+    if (!mounted) return;
+
+    Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+      (route) => false,
+    );
   }
 
   Future<void> _editProfile() async {
@@ -481,8 +507,8 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
         border: Border.all(color: borderColor.withValues(alpha: 0.65)),
       ),
       child: Material(
-        color: cardBackground,
-        borderRadius: BorderRadius.circular(18),
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(16),
         clipBehavior: Clip.antiAlias,
         child: ListTile(
           tileColor: cardBackground,
@@ -536,32 +562,40 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: borderColor.withValues(alpha: 0.65)),
       ),
-      child: ListTile(
-        tileColor: cardBackground,
-        selectedTileColor: cardBackground,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: primaryRed.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(13),
+      child: Material(
+        color: cardBackground,
+        borderRadius: BorderRadius.circular(18),
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          tileColor: cardBackground,
+          selectedTileColor: cardBackground,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 8,
           ),
-          child: Icon(icon, color: primaryRed),
-        ),
-        title: Text(
-          title,
-          style: TextStyle(color: primaryText, fontWeight: FontWeight.w600),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Text(
-            subtitle,
-            style: TextStyle(color: secondaryText, fontSize: 12),
+          leading: Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: primaryRed.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: Icon(icon, color: primaryRed),
           ),
+          title: Text(
+            title,
+            style: TextStyle(color: primaryText, fontWeight: FontWeight.w600),
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              subtitle,
+              style: TextStyle(color: secondaryText, fontSize: 12),
+            ),
+          ),
+          trailing: trailing,
+          onTap: onTap,
         ),
-        trailing: trailing,
-        onTap: onTap,
       ),
     );
   }
@@ -633,10 +667,11 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
+
                   _settingsTile(
                     icon: Icons.logout_rounded,
                     title: 'Logout',
-                    subtitle: 'Account sign-out will be available later',
+                    subtitle: 'Sign out of your account',
                     trailing: Icon(
                       Icons.chevron_right_rounded,
                       color: secondaryText,
@@ -651,14 +686,24 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
                             style: TextStyle(color: primaryText),
                           ),
                           content: Text(
-                            'Account sign-out will be connected when '
-                            'Firebase authentication is added.',
+                            'Are you sure you want to logout?',
                             style: TextStyle(color: secondaryText),
                           ),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(dialogContext),
-                              child: const Text('OK'),
+                              child: const Text('Cancel'),
+                            ),
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.pop(dialogContext);
+                                _logout();
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryRed,
+                                foregroundColor: Colors.white,
+                              ),
+                              child: const Text('Logout'),
                             ),
                           ],
                         ),

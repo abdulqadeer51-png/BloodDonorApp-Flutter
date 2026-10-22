@@ -12,7 +12,20 @@
           "package_name": "com.example.blooddonerapp"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1013098129035-tkpv1fv4bidjo2orj8sg1s0lvvpfp01t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.blooddonerapp",
+            "certificate_hash": "946b9464dd1b12b536fc51b2a99d7071808cb4e4"
+          }
+        },
+        {
+          "client_id": "1013098129035-0v3aepq64q0lra456au8cmrfhjgvpogh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAbk62vnHIRRMO073uHFXQoejhmVq7zif4"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1013098129035-0v3aepq64q0lra456au8cmrfhjgvpogh.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1013098129035-r4frbutd98snbiuu78lm2q535uc6kka2.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.blooddonerapp"
+              }
+            }
+          ]
         }
       }
     }
